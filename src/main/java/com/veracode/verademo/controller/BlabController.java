@@ -424,84 +424,86 @@ public class BlabController {
 
 	@RequestMapping(value = "/blabbers", method = RequestMethod.GET)
 	public String showBlabbers(
-			@RequestParam(value = "sort", required = false) String sort,
-			Model model,
-			HttpServletRequest httpRequest) {
-		if (sort == null || sort.isEmpty()) {
-			sort = "blab_name ASC";
-		}
+	        @RequestParam(value = "sort", required = false) String sort,
+	        Model model,
+	        HttpServletRequest httpRequest) {
+	    if (sort == null || sort.isEmpty()) {
+	        sort = "blab_name ASC";
+	    }
 
-		String nextView = Utils.redirect("feed");
-		logger.info("Entering showBlabbers");
+	    String nextView = Utils.redirect("feed");
+	    logger.info("Entering showBlabbers");
 
-		String username = (String) httpRequest.getSession().getAttribute("username");
-		// Ensure user is logged in
-		if (username == null) {
-			logger.info("User is not Logged In - redirecting...");
-			return Utils.redirect("login?target=blabbers");
-		}
+	    String username = (String) httpRequest.getSession().getAttribute("username");
+	    // Ensure user is logged in
+	    if (username == null) {
+	        logger.info("User is not Logged In - redirecting...");
+	        return Utils.redirect("login?target=blabbers");
+	    }
 
-		logger.info("User is Logged In - continuing... UA=" + httpRequest.getHeader("User-Agent") + " U=" + username);
+	    logger.info("User is Logged In - continuing... UA=" + httpRequest.getHeader("User-Agent") + " U=" + username);
 
-		Connection connect = null;
-		PreparedStatement blabberQuery = null;
+	    Connection connect = null;
+	    PreparedStatement blabberQuery = null;
 
-		/* START EXAMPLE VULNERABILITY */
-		String blabbersSql = "SELECT users.username," + " users.blab_name," + " users.created_at,"
-				+ " SUM(if(listeners.listener=?, 1, 0)) as listeners,"
-				+ " SUM(if(listeners.status='Active',1,0)) as listening"
-				+ " FROM users LEFT JOIN listeners ON users.username = listeners.blabber"
-				+ " WHERE users.username NOT IN (\"admin\",?)" + " GROUP BY users.username" + " ORDER BY " + sort + ";";
+	    /* START EXAMPLE VULNERABILITY */
+	    String blabbersSql = "SELECT users.username, users.blab_name, users.created_at, "
+	            + "SUM(if(listeners.listener=?, 1, 0)) as listeners, "
+	            + "SUM(if(listeners.status='Active',1,0)) as listening "
+	            + "FROM users LEFT JOIN listeners ON users.username = listeners.blabber "
+	            + "WHERE users.username NOT IN ('admin', ?) "
+	            + "GROUP BY users.username "
+	            + "ORDER BY blab_name ASC;";
 
-		try {
-			logger.info("Getting Database connection");
-			// Get the Database Connection
-			Class.forName("com.mysql.jdbc.Driver");
-			connect = DriverManager.getConnection(Constants.create().getJdbcConnectionString());
+	    try {
+	        logger.info("Getting Database connection");
+	        // Get the Database Connection
+	        Class.forName("com.mysql.jdbc.Driver");
+	        connect = DriverManager.getConnection(Constants.create().getJdbcConnectionString());
 
-			// Find the Blabbers
-			logger.info(blabbersSql);
-			blabberQuery = connect.prepareStatement(blabbersSql);
-			blabberQuery.setString(1, username);
-			blabberQuery.setString(2, username);
-			ResultSet blabbersResults = blabberQuery.executeQuery();
-			/* END EXAMPLE VULNERABILITY */
+	        // Find the Blabbers
+	        logger.info(blabbersSql);
+	        blabberQuery = connect.prepareStatement(blabbersSql);
+	        blabberQuery.setString(1, username);
+	        blabberQuery.setString(2, username);
+	        ResultSet blabbersResults = blabberQuery.executeQuery();
+	        /* END EXAMPLE VULNERABILITY */
 
-			List<Blabber> blabbers = new ArrayList<Blabber>();
-			while (blabbersResults.next()) {
-				Blabber blabber = new Blabber();
-				blabber.setBlabName(blabbersResults.getString(2));
-				blabber.setUsername(blabbersResults.getString(1));
-				blabber.setCreatedDate(blabbersResults.getDate(3));
-				blabber.setNumberListeners(blabbersResults.getInt(4));
-				blabber.setNumberListening(blabbersResults.getInt(5));
+	        List<Blabber> blabbers = new ArrayList<Blabber>();
+	        while (blabbersResults.next()) {
+	            Blabber blabber = new Blabber();
+	            blabber.setBlabName(blabbersResults.getString(2));
+	            blabber.setUsername(blabbersResults.getString(1));
+	            blabber.setCreatedDate(blabbersResults.getDate(3));
+	            blabber.setNumberListeners(blabbersResults.getInt(4));
+	            blabber.setNumberListening(blabbersResults.getInt(5));
 
-				blabbers.add(blabber);
-			}
-			model.addAttribute("blabbers", blabbers);
+	            blabbers.add(blabber);
+	        }
+	        model.addAttribute("blabbers", blabbers);
 
-			nextView = "blabbers";
+	        nextView = "blabbers";
 
-		} catch (SQLException | ClassNotFoundException ex) {
-			logger.error(ex);
-		} finally {
-			try {
-				if (blabberQuery != null) {
-					blabberQuery.close();
-				}
-			} catch (SQLException exceptSql) {
-				logger.error(exceptSql);
-			}
-			try {
-				if (connect != null) {
-					connect.close();
-				}
-			} catch (SQLException exceptSql) {
-				logger.error(exceptSql);
-			}
-		}
+	    } catch (SQLException | ClassNotFoundException ex) {
+	        logger.error(ex);
+	    } finally {
+	        try {
+	            if (blabberQuery != null) {
+	                blabberQuery.close();
+	            }
+	        } catch (SQLException exceptSql) {
+	            logger.error(exceptSql);
+	        }
+	        try {
+	            if (connect != null) {
+	                connect.close();
+	            }
+	        } catch (SQLException exceptSql) {
+	            logger.error(exceptSql);
+	        }
+	    }
 
-		return nextView;
+	    return nextView;
 	}
 
 	@RequestMapping(value = "/blabbers", method = RequestMethod.POST)
