@@ -125,7 +125,7 @@ public class UserController {
 	 * @param target
 	 * @param model
 	 * @return
-	 */
+	 */	
 	@RequestMapping(value = "/login", method = RequestMethod.POST)
 	public String processLogin(
 			@RequestParam(value = "user", required = true) String username,
@@ -147,7 +147,7 @@ public class UserController {
 		}
 
 		Connection connect = null;
-		Statement sqlStatement = null;
+		PreparedStatement sqlStatement = null;
 
 		try {
 			// Get the Database Connection
@@ -155,15 +155,14 @@ public class UserController {
 			Class.forName("com.mysql.jdbc.Driver");
 			connect = DriverManager.getConnection(Constants.create().getJdbcConnectionString());
 
-			/* START EXAMPLE VULNERABILITY */
 			// Execute the query
-			logger.info("Creating the Statement");
-			String sqlQuery = "select username, password, password_hint, created_at, last_login, real_name, blab_name from users where username='"
-					+ username + "' and password='" + sha256(password) + "';";
-			sqlStatement = connect.createStatement();
-			logger.info("Execute the Statement");
-			ResultSet result = sqlStatement.executeQuery(sqlQuery);
-			/* END EXAMPLE VULNERABILITY */
+			logger.info("Creating the PreparedStatement");
+			String sqlQuery = "select username, password, password_hint, created_at, last_login, real_name, blab_name from users where username=? and password=?";
+			sqlStatement = connect.prepareStatement(sqlQuery);
+			sqlStatement.setString(1, username);
+			sqlStatement.setString(2, sha256(password));
+			logger.info("Execute the PreparedStatement");
+			ResultSet result = sqlStatement.executeQuery();
 
 			// Did we find exactly 1 user that matched?
 			if (result.first()) {
@@ -228,7 +227,7 @@ public class UserController {
 		logger.info("Redirecting to view: " + nextView);
 		return nextView;
 	}
-
+	
 	@RequestMapping(value = "/password-hint", method = RequestMethod.GET)
 	@ResponseBody
 	public String showPasswordHint(String username) {
@@ -243,10 +242,11 @@ public class UserController {
 
 			Connection connect = DriverManager.getConnection(Constants.create().getJdbcConnectionString());
 
-			String sql = "SELECT password_hint FROM users WHERE username = '" + username + "'";
+			String sql = "SELECT password_hint FROM users WHERE username = ?";
 			logger.info(sql);
-			Statement statement = connect.createStatement();
-			ResultSet result = statement.executeQuery(sql);
+			PreparedStatement statement = connect.prepareStatement(sql);
+			statement.setString(1, username);
+			ResultSet result = statement.executeQuery();
 			if (result.first()) {
 				String password = result.getString("password_hint");
 				String formatString = "Username '" + username + "' has password: %.2s%s";
@@ -327,7 +327,7 @@ public class UserController {
 
 		return "register-finish";
 	}
-
+	
 	@RequestMapping(value = "/register-finish", method = RequestMethod.POST)
 	public String processRegisterFinish(
 			@RequestParam(value = "password", required = true) String password,
@@ -349,7 +349,7 @@ public class UserController {
 		}
 
 		Connection connect = null;
-		Statement sqlStatement = null;
+		PreparedStatement sqlStatement = null;
 
 		try {
 			// Get the Database Connection
@@ -357,23 +357,20 @@ public class UserController {
 			Class.forName("com.mysql.jdbc.Driver");
 			connect = DriverManager.getConnection(Constants.create().getJdbcConnectionString());
 
-			/* START EXAMPLE VULNERABILITY */
 			// Execute the query
 			String mysqlCurrentDateTime = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"))
 					.format(Calendar.getInstance().getTime());
-			StringBuilder query = new StringBuilder();
-			query.append("insert into users (username, password, created_at, real_name, blab_name) values(");
-			query.append("'" + username + "',");
-			query.append("'" + sha256(password) + "',");
-			query.append("'" + mysqlCurrentDateTime + "',");
-			query.append("'" + realName + "',");
-			query.append("'" + blabName + "'");
-			query.append(");");
+			String query = "insert into users (username, password, created_at, real_name, blab_name) values(?, ?, ?, ?, ?)";
 
-			sqlStatement = connect.createStatement();
-			sqlStatement.execute(query.toString());
-			logger.info(query.toString());
-			/* END EXAMPLE VULNERABILITY */
+			sqlStatement = connect.prepareStatement(query);
+			sqlStatement.setString(1, username);
+			sqlStatement.setString(2, sha256(password));
+			sqlStatement.setString(3, mysqlCurrentDateTime);
+			sqlStatement.setString(4, realName);
+			sqlStatement.setString(5, blabName);
+
+			sqlStatement.execute();
+			logger.info(query);
 
 			emailUser(username);
 		} catch (SQLException | ClassNotFoundException ex) {
@@ -427,7 +424,7 @@ public class UserController {
 			mex.printStackTrace();
 		}
 	}
-
+	
 	@RequestMapping(value = "/profile", method = RequestMethod.GET)
 	public String showProfile(
 			@RequestParam(value = "type", required = false) String type,
@@ -443,7 +440,7 @@ public class UserController {
 		}
 
 		Connection connect = null;
-		PreparedStatement myHecklers = null, myInfo = null;
+		PreparedStatement myHecklers = null, myInfo = null, userHistoryStmt = null;
 		String sqlMyHecklers = "SELECT users.username, users.blab_name, users.created_at "
 				+ "FROM users LEFT JOIN listeners ON users.username = listeners.listener "
 				+ "WHERE listeners.blabber=? AND listeners.status='Active';";
@@ -471,22 +468,21 @@ public class UserController {
 			// Get the audit trail for this user
 			ArrayList<String> events = new ArrayList<String>();
 
-			/* START EXAMPLE VULNERABILITY */
-			String sqlMyEvents = "select event from users_history where blabber=\"" + username
-					+ "\" ORDER BY eventid DESC; ";
+			String sqlMyEvents = "select event from users_history where blabber=? ORDER BY eventid DESC;";
 			logger.info(sqlMyEvents);
-			Statement sqlStatement = connect.createStatement();
-			ResultSet userHistoryResult = sqlStatement.executeQuery(sqlMyEvents);
-			/* END EXAMPLE VULNERABILITY */
+			userHistoryStmt = connect.prepareStatement(sqlMyEvents);
+			userHistoryStmt.setString(1, username);
+			ResultSet userHistoryResult = userHistoryStmt.executeQuery();
 
 			while (userHistoryResult.next()) {
 				events.add(userHistoryResult.getString(1));
 			}
 
 			// Get the users information
-			String sql = "SELECT username, real_name, blab_name FROM users WHERE username = '" + username + "'";
+			String sql = "SELECT username, real_name, blab_name FROM users WHERE username = ?";
 			logger.info(sql);
 			myInfo = connect.prepareStatement(sql);
+			myInfo.setString(1, username);
 			ResultSet myInfoResults = myInfo.executeQuery();
 			myInfoResults.next();
 
@@ -503,6 +499,12 @@ public class UserController {
 			try {
 				if (myHecklers != null) {
 					myHecklers.close();
+				}
+				if (userHistoryStmt != null) {
+					userHistoryStmt.close();
+				}
+				if (myInfo != null) {
+					myInfo.close();
 				}
 			} catch (SQLException exceptSql) {
 				logger.error(exceptSql);
