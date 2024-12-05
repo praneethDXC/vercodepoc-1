@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -34,17 +33,21 @@ public class ListenCommand implements BlabberCommand {
 			action.setString(2, username);
 			action.execute();
 
-			sqlQuery = "SELECT blab_name FROM users WHERE username = '" + blabberUsername + "'";
-			Statement sqlStatement = connect.createStatement();
+			sqlQuery = "SELECT blab_name FROM users WHERE username = ?";
+			PreparedStatement sqlStatement = connect.prepareStatement(sqlQuery);
+			sqlStatement.setString(1, blabberUsername);
 			logger.info(sqlQuery);
-			ResultSet result = sqlStatement.executeQuery(sqlQuery);
+			ResultSet result = sqlStatement.executeQuery();
 			result.next();
 
 			/* START EXAMPLE VULNERABILITY */
 			String event = username + " started listening to " + blabberUsername + " (" + result.getString(1) + ")";
-			sqlQuery = "INSERT INTO users_history (blabber, event) VALUES (\"" + username + "\", \"" + event + "\")";
+			sqlQuery = "INSERT INTO users_history (blabber, event) VALUES (?, ?)";
+			PreparedStatement historyStatement = connect.prepareStatement(sqlQuery);
+			historyStatement.setString(1, username);
+			historyStatement.setString(2, event);
 			logger.info(sqlQuery);
-			sqlStatement.execute(sqlQuery);
+			historyStatement.execute();
 			/* END EXAMPLE VULNERABILITY */
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
