@@ -2,16 +2,19 @@ package com.veracode.verademo.utils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
+@Component
 public class Constants {
 	private final String JDBC_DRIVER = "mysql";
 	private final String JDBC_HOSTNAME = "localhost";
 	private final String JDBC_PORT = "3306";
 	private final String JDBC_DATABASE = "blab";
 	private final String JDBC_USER = "blab";
-	/* START EXAMPLE VULNERABILITY */
-	private final String JDBC_PASSWORD = "z2^E6J4$;u;d";
-	/* END EXAMPLE VULNERABILITY */
+
+	@Value("${db.password}")
+	private String JDBC_PASSWORD;
 
 	private String hostname;
 	private String port;
@@ -19,10 +22,6 @@ public class Constants {
 	private String username;
 	private String password;
 
-	/**
-	 * Pull info from the system as an override, otherwise fall back to hardcoded values.
-	 * Environment variables are automatically set in AWS environments.
-	 */
 	public Constants() {
 		String dbnameProp = System.getenv("RDS_DB_NAME");
 		this.dbname = (dbnameProp == null) ? JDBC_DATABASE : dbnameProp;
