@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.owasp.encoder.Encode;
 
 @Controller
 @Scope("request")
@@ -157,7 +158,6 @@ public class BlabController {
 
 		int cnt, len;
 		try {
-			// Convert input to integers
 			cnt = Integer.parseInt(count);
 			len = Integer.parseInt(length);
 		} catch (NumberFormatException e) {
@@ -166,7 +166,6 @@ public class BlabController {
 
 		String username = (String) httpRequest.getSession().getAttribute("username");
 
-		// Get the Database Connection
 		Connection connect;
 		PreparedStatement feedSql;
 		StringBuilder ret = new StringBuilder();
@@ -181,10 +180,11 @@ public class BlabController {
 				Blab blab = new Blab();
 				blab.setPostDate(results.getDate(4));
 
-				ret.append(String.format(template, results.getString(1), // username
-						results.getString(3), // blab content
-						results.getString(2), // blab name
-						blab.getPostDateString(), // timestamp
+				ret.append(String.format(template, 
+						Encode.forHtml(results.getString(1)), // username
+						Encode.forHtml(results.getString(3)), // blab content
+						Encode.forHtml(results.getString(2)), // blab name
+						Encode.forHtml(blab.getPostDateString()), // timestamp
 						results.getInt(6), // blabID
 						results.getInt(5) // comment count
 				));
@@ -193,7 +193,7 @@ public class BlabController {
 			logger.error(ex);
 		}
 
-		return ret.toString();
+		return Encode.forHtml(ret.toString());
 	}
 
 	@RequestMapping(value = "/feed", method = RequestMethod.POST)
