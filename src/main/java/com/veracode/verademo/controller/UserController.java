@@ -79,49 +79,50 @@ public class UserController {
 	 */
 	@RequestMapping(value = "/login", method = RequestMethod.GET)
 	public String showLogin(
-			@RequestParam(value = "target", required = false) String target,
-			@RequestParam(value = "username", required = false) String username,
-			Model model,
-			HttpServletRequest httpRequest,
-			HttpServletResponse httpResponse) {
-		// Check if user is already logged in
-		if (httpRequest.getSession().getAttribute("username") != null) {
-			logger.info("User is already logged in - redirecting...");
-			if (target != null && !target.isEmpty() && !target.equals("null")) {
-				return "redirect:" + target;
-			} else {
-				// default to user's feed
-				return Utils.redirect("feed");
-			}
-		}
+	        @RequestParam(value = "target", required = false) String target,
+	        @RequestParam(value = "username", required = false) String username,
+	        Model model,
+	        HttpServletRequest httpRequest,
+	        HttpServletResponse httpResponse) {
+	    if (httpRequest.getSession().getAttribute("username") != null) {
+	        logger.info("User is already logged in - redirecting...");
+	        if (target != null && !target.isEmpty() && !target.equals("null") && isValidRedirectTarget(target)) {
+	            return "redirect:" + target;
+	        } else {
+	            return Utils.redirect("feed");
+	        }
+	    }
 
-		User user = UserFactory.createFromRequest(httpRequest);
-		if (user != null) {
-			Utils.setSessionUserName(httpRequest, httpResponse, user.getUserName());
-			logger.info("User is remembered - redirecting...");
-			if (target != null && !target.isEmpty() && !target.equals("null")) {
-				return "redirect:" + target;
-			} else {
-				// default to user's feed
-				return Utils.redirect("feed");
-			}
-		} else {
-			logger.info("User is not remembered");
-		}
+	    User user = UserFactory.createFromRequest(httpRequest);
+	    if (user != null) {
+	        Utils.setSessionUserName(httpRequest, httpResponse, user.getUserName());
+	        logger.info("User is remembered - redirecting...");
+	        if (target != null && !target.isEmpty() && !target.equals("null") && isValidRedirectTarget(target)) {
+	            return "redirect:" + target;
+	        } else {
+	            return Utils.redirect("feed");
+	        }
+	    } else {
+	        logger.info("User is not remembered");
+	    }
 
-		if (username == null) {
-			username = "";
-		}
+	    if (username == null) {
+	        username = "";
+	    }
 
-		if (target == null) {
-			target = "";
-		}
+	    if (target == null) {
+	        target = "";
+	    }
 
-		logger.info("Entering showLogin with username " + username + " and target " + target);
+	    logger.info("Entering showLogin with username " + username + " and target " + target);
 
-		model.addAttribute("username", username);
-		model.addAttribute("target", target);
-		return "login";
+	    model.addAttribute("username", username);
+	    model.addAttribute("target", target);
+	    return "login";
+	}
+
+	private boolean isValidRedirectTarget(String target) {
+	    return target.matches("^[a-zA-Z0-9/_-]+$") && !target.startsWith("http://") && !target.startsWith("https://");
 	}
 
 	/**
@@ -133,104 +134,98 @@ public class UserController {
 	 */	
 	@RequestMapping(value = "/login", method = RequestMethod.POST)
 	public String processLogin(
-			@RequestParam(value = "user", required = true) String username,
-			@RequestParam(value = "password", required = true) String password,
-			@RequestParam(value = "remember", required = false) String remember,
-			@RequestParam(value = "target", required = false) String target,
-			Model model,
-			HttpServletRequest req,
-			HttpServletResponse response) {
-		logger.info("Entering processLogin");
+	        @RequestParam(value = "user", required = true) String username,
+	        @RequestParam(value = "password", required = true) String password,
+	        @RequestParam(value = "remember", required = false) String remember,
+	        @RequestParam(value = "target", required = false) String target,
+	        Model model,
+	        HttpServletRequest req,
+	        HttpServletResponse response) {
+	    logger.info("Entering processLogin");
 
-		// Determine eventual redirect. Do this here in case we're already logged in
-		String nextView;
-		if (target != null && !target.isEmpty() && !target.equals("null")) {
-			nextView = "redirect:" + target;
-		} else {
-			// default to user's feed
-			nextView = Utils.redirect("feed");
-		}
+	    String nextView;
+	    if (target != null && !target.isEmpty() && !target.equals("null")) {
+	        if (target.matches("^[a-zA-Z0-9/_-]+$")) {
+	            nextView = "redirect:" + target;
+	        } else {
+	            throw new IllegalArgumentException("Invalid redirect target");
+	        }
+	    } else {
+	        nextView = Utils.redirect("feed");
+	    }
 
-		Connection connect = null;
-		PreparedStatement sqlStatement = null;
+	    Connection connect = null;
+	    PreparedStatement sqlStatement = null;
 
-		try {
-			// Get the Database Connection
-			logger.info("Creating the Database connection");
-			Class.forName("com.mysql.jdbc.Driver");
-			connect = DriverManager.getConnection(Constants.create().getJdbcConnectionString());
+	    try {
+	        logger.info("Creating the Database connection");
+	        Class.forName("com.mysql.jdbc.Driver");
+	        connect = DriverManager.getConnection(Constants.create().getJdbcConnectionString());
 
-			// Execute the query
-			logger.info("Creating the PreparedStatement");
-			String sqlQuery = "select username, password, password_hint, created_at, last_login, real_name, blab_name from users where username=? and password=?";
-			sqlStatement = connect.prepareStatement(sqlQuery);
-			sqlStatement.setString(1, username);
-			sqlStatement.setString(2, sha256(password));
-			logger.info("Execute the PreparedStatement");
-			ResultSet result = sqlStatement.executeQuery();
+	        logger.info("Creating the PreparedStatement");
+	        String sqlQuery = "select username, password, password_hint, created_at, last_login, real_name, blab_name from users where username=? and password=?";
+	        sqlStatement = connect.prepareStatement(sqlQuery);
+	        sqlStatement.setString(1, username);
+	        sqlStatement.setString(2, sha256(password));
+	        logger.info("Execute the PreparedStatement");
+	        ResultSet result = sqlStatement.executeQuery();
 
-			// Did we find exactly 1 user that matched?
-			if (result.first()) {
-				logger.info("User Found.");
-				// Remember the username as a courtesy.
-				Utils.setUsernameCookie(response, result.getString("username"));
+	        if (result.first()) {
+	            logger.info("User Found.");
+	            Utils.setUsernameCookie(response, result.getString("username"));
 
-				// If the user wants us to auto-login, store the user details as a cookie.
-				if (remember != null) {
-					User currentUser = new User(result.getString("username"), result.getString("password_hint"),
-							result.getTimestamp("created_at"), result.getTimestamp("last_login"),
-							result.getString("real_name"), result.getString("blab_name"));
+	            if (remember != null) {
+	                User currentUser = new User(result.getString("username"), result.getString("password_hint"),
+	                        result.getTimestamp("created_at"), result.getTimestamp("last_login"),
+	                        result.getString("real_name"), result.getString("blab_name"));
 
-					UserFactory.updateInResponse(currentUser, response);
-				}
+	                UserFactory.updateInResponse(currentUser, response);
+	            }
 
-				Utils.setSessionUserName(req, response, result.getString("username"));
+	            Utils.setSessionUserName(req, response, result.getString("username"));
 
-				// Update last login timestamp
-				PreparedStatement update = connect.prepareStatement("UPDATE users SET last_login=NOW() WHERE username=?;");
-				update.setString(1, result.getString("username"));
-				update.execute();
-			} else {
-				// Login failed...
-				logger.info("User Not Found");
-				model.addAttribute("error", "Login failed. Please try again.");
-				model.addAttribute("target", target);
-				nextView = "login";
-			}
-		} catch (SQLException exceptSql) {
-			logger.error(exceptSql);
-			model.addAttribute("error", exceptSql.getMessage() + "<br/>" + displayErrorForWeb(exceptSql));
-			model.addAttribute("target", target);
-			nextView = "login";
-		} catch (ClassNotFoundException cnfe) {
-			logger.error(cnfe);
-			model.addAttribute("error", cnfe.getMessage());
-			model.addAttribute("target", target);
+	            PreparedStatement update = connect.prepareStatement("UPDATE users SET last_login=NOW() WHERE username=?;");
+	            update.setString(1, result.getString("username"));
+	            update.execute();
+	        } else {
+	            logger.info("User Not Found");
+	            model.addAttribute("error", "Login failed. Please try again.");
+	            model.addAttribute("target", target);
+	            nextView = "login";
+	        }
+	    } catch (SQLException exceptSql) {
+	        logger.error(exceptSql);
+	        model.addAttribute("error", exceptSql.getMessage() + "<br/>" + displayErrorForWeb(exceptSql));
+	        model.addAttribute("target", target);
+	        nextView = "login";
+	    } catch (ClassNotFoundException cnfe) {
+	        logger.error(cnfe);
+	        model.addAttribute("error", cnfe.getMessage());
+	        model.addAttribute("target", target);
 
-		} finally {
-			try {
-				if (sqlStatement != null) {
-					sqlStatement.close();
-				}
-			} catch (SQLException exceptSql) {
-				logger.error(exceptSql);
-				model.addAttribute("error", exceptSql.getMessage());
-				model.addAttribute("target", target);
-			}
-			try {
-				if (connect != null) {
-					connect.close();
-				}
-			} catch (SQLException exceptSql) {
-				logger.error(exceptSql);
-				model.addAttribute("error", exceptSql.getMessage());
-				model.addAttribute("target", target);
-			}
-		}
+	    } finally {
+	        try {
+	            if (sqlStatement != null) {
+	                sqlStatement.close();
+	            }
+	        } catch (SQLException exceptSql) {
+	            logger.error(exceptSql);
+	            model.addAttribute("error", exceptSql.getMessage());
+	            model.addAttribute("target", target);
+	        }
+	        try {
+	            if (connect != null) {
+	                connect.close();
+	            }
+	        } catch (SQLException exceptSql) {
+	            logger.error(exceptSql);
+	            model.addAttribute("error", exceptSql.getMessage());
+	            model.addAttribute("target", target);
+	        }
+	    }
 
-		// Redirect to the appropriate place based on login actions above
-		logger.info("Redirecting to view: " + nextView);
-		return nextView;
+	    logger.info("Redirecting to view: " + nextView);
+	    return nextView;
 	}
 	
 	@RequestMapping(value = "/password-hint", method = RequestMethod.GET)
