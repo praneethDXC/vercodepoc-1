@@ -3,6 +3,8 @@ package com.veracode.verademo.controller;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletContext;
@@ -20,84 +22,100 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 @Scope("request")
 public class ToolsController {
-	private static final Logger logger = LogManager.getLogger("VeraDemo:ToolsController");
+    private static final Logger logger = LogManager.getLogger("VeraDemo:ToolsController");
 
-	@Autowired
-	ServletContext context;
+    @Autowired
+    ServletContext context;
 
-	@RequestMapping(value = "/tools", method = RequestMethod.GET)
-	public String tools() {
-		return "tools";
-	}
+    @RequestMapping(value = "/tools", method = RequestMethod.GET)
+    public String tools() {
+        return "tools";
+    }
 
-	@RequestMapping(value = "/tools", method = RequestMethod.POST)
-	public String tools(@RequestParam(value = "host", required = false) String host, @RequestParam(value = "fortunefile", required = false) String fortuneFile, Model model) {
-		model.addAttribute("ping", host != null ? ping(host) : "");
+    @RequestMapping(value = "/tools", method = RequestMethod.POST)
+    public String tools(@RequestParam(value = "host", required = false) String host, @RequestParam(value = "fortunefile", required = false) String fortuneFile, Model model) {
+        model.addAttribute("ping", host != null ? ping(host) : "");
 
-		if (fortuneFile == null) {
-			fortuneFile = "literature";
-		}
-		model.addAttribute("fortunes", fortune(fortuneFile));
+        if (fortuneFile == null) {
+            fortuneFile = "literature";
+        }
+        model.addAttribute("fortunes", fortune(fortuneFile));
 
-		return "tools";
-	}
+        return "tools";
+    }
 
-	private String ping(String host) {
-		String output = "";
-		Process proc;
+    private String ping(String host) {
+        String output = "";
+        Process proc;
 
-		logger.info("Pinging: " + host);
+        logger.info("Pinging: " + host);
 
-		try {
-			/* START EXAMPLE VULNERABILITY */
-			proc = Runtime.getRuntime().exec(new String[] { "bash", "-c", "ping -c1 " + host });
-			/* END EXAMPLE VULNERABILITY */
+        try {
+            if (!isValidHost(host)) {
+                throw new IllegalArgumentException("Invalid host provided.");
+            }
 
-			proc.waitFor(5, TimeUnit.SECONDS);
-			InputStreamReader isr = new InputStreamReader(proc.getInputStream());
-			BufferedReader br = new BufferedReader(isr);
+            proc = Runtime.getRuntime().exec(new String[] { "ping", "-c1", host });
 
-			String line;
+            proc.waitFor(5, TimeUnit.SECONDS);
+            InputStreamReader isr = new InputStreamReader(proc.getInputStream());
+            BufferedReader br = new BufferedReader(isr);
 
-			while ((line = br.readLine()) != null) {
-				output += line + "\n";
-			}
+            String line;
 
-			logger.info(proc.exitValue());
-		} catch (IOException ex) {
-			logger.error(ex);
-		} catch (InterruptedException ex) {
-			logger.error(ex);
-		}
+            while ((line = br.readLine()) != null) {
+                output += line + "\n";
+            }
 
-		return output;
-	}
+            logger.info(proc.exitValue());
+        } catch (IOException ex) {
+            logger.error(ex);
+        } catch (InterruptedException ex) {
+            logger.error(ex);
+        }
 
-	private String fortune(String fortuneFile) {
-		String cmd = "/bin/fortune " + fortuneFile;
+        return output;
+    }
 
-		String output = "";
-		Process proc;
-		try {
-			/* START EXAMPLE VULNERABILITY */
-			proc = Runtime.getRuntime().exec(new String[] { "bash", "-c", cmd });
-			/* END EXAMPLE VULNERABILITY */
+    private String fortune(String fortuneFile) {
+        String output = "";
+        Process proc;
 
-			proc.waitFor(5, TimeUnit.SECONDS);
-			InputStreamReader isr = new InputStreamReader(proc.getInputStream());
-			BufferedReader br = new BufferedReader(isr);
+        try {
+            if (!isValidFortuneFile(fortuneFile)) {
+                throw new IllegalArgumentException("Invalid fortune file provided.");
+            }
 
-			String line;
+            proc = Runtime.getRuntime().exec(new String[] { "/bin/fortune", fortuneFile });
 
-			while ((line = br.readLine()) != null) {
-				output += line + "\n";
-			}
-		} catch (IOException ex) {
-			logger.error(ex);
-		} catch (InterruptedException ex) {
-			logger.error(ex);
-		}
+            proc.waitFor(5, TimeUnit.SECONDS);
+            InputStreamReader isr = new InputStreamReader(proc.getInputStream());
+            BufferedReader br = new BufferedReader(isr);
 
-		return output;
-	}
+            String line;
+
+            while ((line = br.readLine()) != null) {
+                output += line + "\n";
+            }
+        } catch (IOException ex) {
+            logger.error(ex);
+        } catch (InterruptedException ex) {
+            logger.error(ex);
+        }
+
+        return output;
+    }
+
+    private boolean isValidHost(String host) {
+        try {
+            InetAddress.getByName(host);
+            return host.matches("^[a-zA-Z0-9.-]+$");
+        } catch (UnknownHostException e) {
+            return false;
+        }
+    }
+
+    private boolean isValidFortuneFile(String fortuneFile) {
+        return fortuneFile.matches("^[a-zA-Z0-9._/-]+$");
+    }
 }
