@@ -159,7 +159,7 @@ public class UserController {
 			// Execute the query
 			logger.info("Creating the Statement");
 			String sqlQuery = "select username, password, password_hint, created_at, last_login, real_name, blab_name from users where username='"
-					+ username + "' and password='" + md5(password) + "';";
+					+ username + "' and password='" + sha256(password) + "';";
 			sqlStatement = connect.createStatement();
 			logger.info("Execute the Statement");
 			ResultSet result = sqlStatement.executeQuery(sqlQuery);
@@ -364,7 +364,7 @@ public class UserController {
 			StringBuilder query = new StringBuilder();
 			query.append("insert into users (username, password, created_at, real_name, blab_name) values(");
 			query.append("'" + username + "',");
-			query.append("'" + md5(password) + "',");
+			query.append("'" + sha256(password) + "',");
 			query.append("'" + mysqlCurrentDateTime + "',");
 			query.append("'" + realName + "',");
 			query.append("'" + blabName + "'");
@@ -901,11 +901,12 @@ public class UserController {
 		}
 	}
 
-	private static String md5(String val) {
+	
+	private static String sha256(String val) {
 		MessageDigest md;
 		String ret = null;
 		try {
-			md = MessageDigest.getInstance("MD5");
+			md = MessageDigest.getInstance("SHA-256");
 			md.update(val.getBytes());
 			byte[] digest = md.digest();
 			ret = DatatypeConverter.printHexBinary(digest);

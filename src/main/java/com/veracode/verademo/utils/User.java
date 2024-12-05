@@ -35,7 +35,7 @@ public class User implements Serializable {
 	public User(String userName, String password, Timestamp dateCreated, Timestamp lastLogin, String blabName,
 			String realName) {
 		this.userName = userName;
-		this.password = md5(password);
+		this.password = sha256(password);
 		this.hint = password;
 		this.dateCreated = dateCreated;
 		this.lastLogin = lastLogin;
@@ -60,7 +60,7 @@ public class User implements Serializable {
 
 	public String setPassword(String password)
 	{
-		this.password = md5(password);
+		this.password = sha256(password);
 		return password;
 	}
 	
@@ -95,12 +95,12 @@ public class User implements Serializable {
 		return realName;
 	}
 	
-	private static String md5(String val)
+	private static String sha256(String val)
 	{
 		MessageDigest md;
 		String ret = null;
 		try {
-			md = MessageDigest.getInstance("MD5");
+			md = MessageDigest.getInstance("SHA-256");
 			md.update(val.getBytes());
 		    byte[] digest = md.digest();
 		    ret = DatatypeConverter.printHexBinary(digest);
