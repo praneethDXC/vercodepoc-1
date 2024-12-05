@@ -2,7 +2,7 @@
 	pageEncoding="US-ASCII"%>
 <%@ page import="com.veracode.verademo.model.Blabber"%>
 <%@ page import="java.util.*"%>
-<%@ page import="org.springframework.web.util.HtmlUtils" %>
+<%@ page import="org.owasp.encoder.Encode" %>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -62,7 +62,7 @@
 			if (null != error) {
 		%>
 		<div class="alert alert-danger" role="alert">
-			<%=error%>
+			<%= Encode.forHtml(error) %>
 		</div>
 
 		<%
@@ -80,11 +80,11 @@
 							<thead>
 								<tr>
 									<th></th>
-									<th class="commenterName"><a href="?sort=blab_name ASC">Name</a></th>
+									<th class="commenterName"><a href="?sort=<%= Encode.forUri("blab_name ASC") %>">Name</a></th>
 									<th class="commenterJoinDate"><a
-										href="?sort=date_created DESC">Join date</a></th>
+										href="?sort=<%= Encode.forUri("date_created DESC") %>">Join date</a></th>
 									<th class="commenterListeners"><a
-										href="?sort=listeners DESC">Listeners</a></th>
+										href="?sort=<%= Encode.forUri("listeners DESC") %>">Listeners</a></th>
 									<th></th>
 								</tr>
 							</thead>
@@ -97,26 +97,26 @@
 								%>
 								<tr>
 									<td class="commenterImage">
-										<img src="resources/images/<%= blabber.getUsername() %>.png" />
+										<img src="resources/images/<%= Encode.forUri(blabber.getUsername()) %>.png" />
 									</td>
 									<td class="commenterName">
-										<%= blabber.getBlabName() %>
+										<%= Encode.forHtml(blabber.getBlabName()) %>
 									</td>
 									<td class="commenterJoinDate">
-										<%= blabber.getCreatedDateString() %>
+										<%= Encode.forHtml(blabber.getCreatedDateString()) %>
 									</td>
 									<td class="commenterListening">
-										&nbsp;<%= blabber.getNumberListening() %>&nbsp;
+										&nbsp;<%= Encode.forHtml(String.valueOf(blabber.getNumberListening())) %>&nbsp;
 									</td>
 									<td>
 										<form class="form-inline" role="form" method="POST"
 											action="blabbers">
 											<input type="hidden" name="blabberUsername"
-												value="<%= HtmlUtils.htmlEscape(blabber.getUsername()) %>" />
+												value="<%= Encode.forHtmlAttribute(blabber.getUsername()) %>" />
 											<input type="hidden" name="command"
-												value="<%=(blabber.getNumberListeners() == 1 ? "ignore" : "listen")%>" />
+												value="<%= Encode.forHtmlAttribute(blabber.getNumberListeners() == 1 ? "ignore" : "listen") %>" />
 											<input type="submit" class="btn btn-default pull-right" name="button"
-												value="<%=(blabber.getNumberListeners() == 1 ? "Ignore" : "Listen")%>" />
+												value="<%= Encode.forHtmlAttribute(blabber.getNumberListeners() == 1 ? "Ignore" : "Listen") %>" />
 										</form>
 									</td>
 								</tr>

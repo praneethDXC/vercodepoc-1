@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=US-ASCII"
 	pageEncoding="US-ASCII"%>
+<%@ page import="org.owasp.encoder.Encode" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,7 +57,7 @@
 			if (null != error) {
 		%>
 		<div class="alert alert-danger" role="alert">
-			<%=error%>
+			<%= Encode.forHtml(error) %>
 		</div>
 
 		<%
@@ -73,16 +74,16 @@
 							password to login to Blab</h3>
 					</div>
 					<div class="panel-body">
-						<form method="POST" action="<%= request.getAttribute("javax.servlet.forward.request_uri") %>">
+						<form method="POST" action="<%= Encode.forUriComponent((String) request.getAttribute("javax.servlet.forward.request_uri")) %>">
 							<input type="hidden" name="target"
-								value="<%=(String) request.getAttribute("target")%>">
+								value="<%= Encode.forHtmlAttribute((String) request.getAttribute("target")) %>">
 							<table class="table table-condensed">
 								<tbody>
 									<tr>
 										<td>Username</td>
 										<td><div class="form-group">
 												<input type="text" class="form-control" name="user"
-													value="<%=(String) request.getAttribute("username")%>">
+													value="<%= Encode.forHtmlAttribute((String) request.getAttribute("username")) %>">
 											</div><a href="javascript:hint()">Hint</a></td>
 									</tr>
 									<tr>
@@ -126,7 +127,7 @@
 
 		var oReq = new XMLHttpRequest();
 		oReq.addEventListener("load", alerter);
-		oReq.open("GET", "/password-hint?username=" + document.forms[0].user.value);
+		oReq.open("GET", "/password-hint?username=" + encodeURIComponent(document.forms[0].user.value));
 		oReq.send();
 	}
 	</script>

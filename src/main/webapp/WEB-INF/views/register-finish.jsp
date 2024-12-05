@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=US-ASCII"
 	pageEncoding="US-ASCII"%>
+<%@ page import="org.owasp.encoder.Encode" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,7 +57,7 @@
 			if (null != error) {
 		%>
 		<div class="alert alert-danger" role="alert">
-			<%=error%>
+			<%= Encode.forHtml(error) %>
 		</div>
 
 		<%
@@ -79,7 +80,7 @@
 																		<tr>
 										<td>Username</td>
 										<td><div class="form-group">
-												<%= request.getSession().getAttribute("username") %>
+												<%= Encode.forHtml((String) request.getSession().getAttribute("username")) %>
 											</div></td>
 									</tr>
 									<tr>

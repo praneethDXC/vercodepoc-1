@@ -2,6 +2,7 @@
 	pageEncoding="US-ASCII"%>
 <%@ page import="java.util.*"%>
 <%@ page import="com.veracode.verademo.model.Blabber"%>
+<%@ page import="org.owasp.encoder.Encode" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -59,7 +60,7 @@
 			if (null != error) {
 		%>
 		<div class="alert alert-danger" role="alert">
-			<%=error%>
+			<%= Encode.forHtml(error) %>
 		</div>
 
 		<%
@@ -80,14 +81,14 @@
 								<tbody>
 									<tr>
 										<td class="commenterImage">
-											<img id="profileImage" src="resources/images/<%= request.getAttribute("image") %>" />
+											<img id="profileImage" src="resources/images/<%= Encode.forUriComponent((String) request.getAttribute("image")) %>" />
 										</td>
 										<td>
 											<div class="form-group">
 												<input type="file" class="form-control" name="file" />
 											</div>
 											<div>
-												<a href="downloadprofileimage?image=<%= request.getAttribute("username") %>.png">
+												<a href="downloadprofileimage?image=<%= Encode.forUriComponent((String) request.getAttribute("username")) %>.png">
 													Download Current Image
 												</a>
 											</div>
@@ -98,7 +99,7 @@
 										<td>
 											<div class="form-group">
 												<input type="text" class="form-control" name="realName"
-													value="<%=request.getAttribute("realName")%>" />
+													value="<%= Encode.forHtmlAttribute((String) request.getAttribute("realName")) %>" />
 											</div>
 										</td>
 									</tr>
@@ -107,7 +108,7 @@
 										<td>
 											<div class="form-group">
 												<input type="text" class="form-control" name="blabName"
-													value="<%=request.getAttribute("blabName")%>" />
+													value="<%= Encode.forHtmlAttribute((String) request.getAttribute("blabName")) %>" />
 											</div>
 										</td>
 									</tr>
@@ -116,7 +117,7 @@
 										<td>
 											<div class="form-group">
 												<input type="text" class="form-control" name="username"
-													value="<%=request.getAttribute("username")%>" />
+													value="<%= Encode.forHtmlAttribute((String) request.getAttribute("username")) %>" />
 											</div>
 										</td>
 									</tr>
@@ -157,11 +158,11 @@
 							<li>
 								<div class="clear">
 									<div class="commenterImage">
-										<img src="resources/images/<%= heckler.getUsername() %>.png" />
+										<img src="resources/images/<%= Encode.forUriComponent(heckler.getUsername()) %>.png" />
 									</div>
 									<div class="commentText">
-										<p><%= heckler.getBlabName() %></p>
-										<span class="date sub-text">member since <%= heckler.getCreatedDateString() %></span>
+										<p><%= Encode.forHtml(heckler.getBlabName()) %></p>
+										<span class="date sub-text">member since <%= Encode.forHtml(heckler.getCreatedDateString()) %></span>
 										<br/>
 									</div>
 								</div>
@@ -197,7 +198,7 @@
 									for (int i = 0; i < events.size(); i++) {
 							%>
 							<li>
-								<p class=""><%=events.get(i)%></p>
+								<p class=""><%= Encode.forHtml(events.get(i)) %></p>
 							</li>
 							<%
 									}
@@ -242,21 +243,21 @@
 					if (data) {
 						if ('values' in data) {
 							$.each(data.values, function(key, val) {
-								$('input[name="' + key + '"]').val(val);
+								$('input[name="' + key + '"]').val(Encode.forJavaScript(val));
 								if (key === "username") {
-									$('#profileImage').attr('src', 'resources/images/' + val + '.png');
+									$('#profileImage').attr('src', 'resources/images/' + Encode.forUriComponent(val) + '.png');
 								}
 							});
 						}
 						if ('message' in data) {
-							$('body').append(data.message);
+							$('body').append(Encode.forHtml(data.message));
 						}
 					}
 				},
 				error : function(err) {
 					console.log("Form submission error", err);
 					if (err.responseJSON && 'message' in err.responseJSON) {
-						$('body').append(err.responseJSON.message);
+						$('body').append(Encode.forHtml(err.responseJSON.message));
 					}
 				},
 			});

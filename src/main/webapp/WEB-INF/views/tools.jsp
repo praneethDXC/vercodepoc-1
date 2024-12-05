@@ -4,7 +4,7 @@
 <%@ page import="java.util.*"%>
 <%@ page isELIgnored="false"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
-
+<%@ page import="org.owasp.encoder.Encode" %>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -61,10 +61,10 @@
 			<form method="post">
 				<label for="host">Host:</label> <input type="text" name="host"
 					<%if (request.getParameter("host") != null) {%>
-					value="<%=request.getParameter("host")%>" <%}%> /> <input
+					value="<%= Encode.forHtmlAttribute(request.getParameter("host")) %>" <%}%> /> <input
 					type="submit" value="Check" />
 			</form>
-			<pre>${ping}</pre>
+			<pre><%= Encode.forHtml((String) request.getAttribute("ping")) %></pre>
 		</div>
 		<div>
 			<h5>Show a UNIX fortune from one of the 2 supported dictionaries.</h5>
@@ -74,7 +74,7 @@
 					<option value="riddles">riddles</option>
 				</select> <input type="submit" value="Change" />
 			</form>
-			<pre>${fortunes}</pre>
+			<pre><%= Encode.forHtml((String) request.getAttribute("fortunes")) %></pre>
 		</div>
 	</div>
 

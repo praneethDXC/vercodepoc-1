@@ -2,6 +2,7 @@
 	pageEncoding="US-ASCII"%>
 <%@ page import="com.veracode.verademo.model.*"%>
 <%@ page import="java.util.*"%>
+<%@ page import="org.owasp.encoder.Encode" %>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -55,7 +56,7 @@
 		<div class="page-header">
 			<h3>
 				Hi
-				<%=request.getAttribute("currentUser")%>, welcome to Blab-a-Gag
+				<%= Encode.forHtml(request.getAttribute("currentUser").toString()) %>, welcome to Blab-a-Gag
 			</h3>
 			<h4>The home of of witty one-liners</h4>
 		</div>
@@ -66,7 +67,7 @@
 		%>
 		
 		<div class="alert alert-danger" role="alert">
-			<%=error%>
+			<%= Encode.forHtml(error) %>
 		</div>
 
 		<%
@@ -90,16 +91,16 @@
 							<li>
 								<div>
 									<div class="commenterImage">
-										<img src="resources/images/<%= post.getAuthor().getUsername() %>.png" />
+										<img src="resources/images/<%= Encode.forUriComponent(post.getAuthor().getUsername()) %>.png" />
 									</div>
 									<div class="commentText">
-										<p class=""><%= post.getContent() %></p>
+										<p class=""><%= Encode.forHtml(post.getContent()) %></p>
 										<span class="date sub-text">
-											by <%= post.getAuthor().getBlabName() %> on <%= post.getPostDateString() %>
+											by <%= Encode.forHtml(post.getAuthor().getBlabName()) %> on <%= Encode.forHtml(post.getPostDateString()) %>
 										</span>
 										<br/>
 										<span class="date sub-text">
-											<a href="blab?blabid=<%= post.getId() %>"><%= post.getCommentCount() %> Comments</a>
+											<a href="blab?blabid=<%= Encode.forUriComponent(post.getId()) %>"><%= Encode.forHtml(post.getCommentCount().toString()) %> Comments</a>
 										</span>
 									</div>
 								</div>
@@ -138,10 +139,10 @@
 							%>
 							<li>
 								<div class="commentText">
-									<p class=""><%= post.getContent() %></p>
-									<span class="date sub-text">by you on <%= post.getPostDateString() %></span><br/>
+									<p class=""><%= Encode.forHtml(post.getContent()) %></p>
+									<span class="date sub-text">by you on <%= Encode.forHtml(post.getPostDateString()) %></span><br/>
 									<span class="date sub-text">
-										<a href="blab?blabid=<%= post.getId() %>"><%= post.getCommentCount() %> Comments</a>
+										<a href="blab?blabid=<%= Encode.forUriComponent(post.getId()) %>"><%= Encode.forHtml(post.getCommentCount().toString()) %> Comments</a>
 									</span>
 								</div>
 							</li>
@@ -171,7 +172,7 @@
 				len : 10
 			}, function(data) {
 				if (data) {
-					$("#feed ul").append(data);
+					$("#feed ul").append(Encode.forHtml(data));
 				} else {
 					$(obj).remove();
 				}

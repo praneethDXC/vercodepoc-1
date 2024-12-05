@@ -2,6 +2,7 @@
 	pageEncoding="US-ASCII"%>
 <%@ page import="com.veracode.verademo.model.*"%>
 <%@ page import="java.util.*"%>
+<%@ page import="org.owasp.encoder.Encode" %>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -53,11 +54,11 @@
 	<div class="container theme-showcase" role="main">
 
 		<div class="page-header">
-			<h4><%= request.getAttribute("blab_name") %> says...</h4>
+			<h4><%= Encode.forHtml(request.getAttribute("blab_name").toString()) %> says...</h4>
 		</div>
 		<div>
 			<blockquote>
-				<h3><%= request.getAttribute("content") %></h3>
+				<h3><%= Encode.forHtml(request.getAttribute("content").toString()) %></h3>
 			</blockquote>
 		</div>
 		<%
@@ -65,7 +66,7 @@
 			if (error != null) {
 		%>
 		<div class="alert alert-danger" role="alert">
-			<%= error %>
+			<%= Encode.forHtml(error) %>
 		</div>
 		<%
 			}
@@ -88,7 +89,7 @@
 									<button class="btn btn-default">Add</button>
 								</div>
 								<input type="hidden" name="blabid"
-									value="<%=request.getAttribute("blabid")%>">
+									value="<%= Encode.forHtmlAttribute(request.getAttribute("blabid").toString()) %>">
 							</form>
 						</div>
 						<ul class="commentList">
@@ -101,14 +102,14 @@
 							<li>
 								<div>
 									<div class="commenterImage">
-										<img src="resources/images/<%= comment.getAuthor().getUsername() %>.png" />
+										<img src="resources/images/<%= Encode.forUriComponent(comment.getAuthor().getUsername()) %>.png" />
 									</div>
 									<div class="blockquote">
 										<p class="">
-											"<%= comment.getContent() %>"
+											"<%= Encode.forHtml(comment.getContent()) %>"
 										</p>
-										<span class="date sub-text">by <%= comment.getAuthor().getBlabName() %>
-											on <%= comment.getTimestampString() %></span><br>
+										<span class="date sub-text">by <%= Encode.forHtml(comment.getAuthor().getBlabName()) %>
+											on <%= Encode.forHtml(comment.getTimestampString()) %></span><br>
 									</div>
 								</div>
 							</li>
