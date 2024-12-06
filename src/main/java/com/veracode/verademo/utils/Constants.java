@@ -2,10 +2,7 @@ package com.veracode.verademo.utils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
-@Component
 public class Constants {
 	private final String JDBC_DRIVER = "mysql";
 	private final String JDBC_HOSTNAME = "localhost";
@@ -13,15 +10,16 @@ public class Constants {
 	private final String JDBC_DATABASE = "blab";
 	private final String JDBC_USER = "blab";
 
-	@Value("${db.password}")
-	private String JDBC_PASSWORD;
-
 	private String hostname;
 	private String port;
 	private String dbname;
 	private String username;
 	private String password;
 
+	/**
+	 * Pull info from the system as an override, otherwise fall back to hardcoded values.
+	 * Environment variables are automatically set in AWS environments.
+	 */
 	public Constants() {
 		String dbnameProp = System.getenv("RDS_DB_NAME");
 		this.dbname = (dbnameProp == null) ? JDBC_DATABASE : dbnameProp;
@@ -36,7 +34,7 @@ public class Constants {
 		this.username = (userProp == null) ? JDBC_USER : userProp;
 		
 		String passwordProp = System.getenv("RDS_PASSWORD");
-		this.password = (passwordProp == null) ? JDBC_PASSWORD : passwordProp;
+		this.password = (passwordProp == null) ? "" : passwordProp;
 	}
 
 	public static final Constants create() {

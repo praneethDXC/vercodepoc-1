@@ -10,7 +10,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.Properties;
 import java.util.Random;
 
 import javax.servlet.ServletContext;
@@ -37,46 +36,35 @@ public class ResetController {
 	@Autowired
 	ServletContext context;
 
-	private static User[] users;
-
-	static {
-		Properties properties = new Properties();
-		try (FileReader reader = new FileReader("config.properties")) {
-			properties.load(reader);
-			users = new User[] {
-				User.create(properties.getProperty("user.admin.username"), properties.getProperty("user.admin.password"), "Thats Mr Administrator to you."),
-				User.create(properties.getProperty("user.john.username"), properties.getProperty("user.john.password"), "John Smith"),
-				User.create(properties.getProperty("user.paul.username"), properties.getProperty("user.paul.password"), "Paul Farrington"),
-				User.create(properties.getProperty("user.chrisc.username"), properties.getProperty("user.chrisc.password"), "Chris Campbell"),
-				User.create(properties.getProperty("user.laurie.username"), properties.getProperty("user.laurie.password"), "Laurie Mercer"),
-				User.create(properties.getProperty("user.nabil.username"), properties.getProperty("user.nabil.password"), "Nabil Bousselham"),
-				User.create(properties.getProperty("user.julian.username"), properties.getProperty("user.julian.password"), "Julian Totzek-Hallhuber"),
-				User.create(properties.getProperty("user.joash.username"), properties.getProperty("user.joash.password"), "Joash Herbrink"),
-				User.create(properties.getProperty("user.andrzej.username"), properties.getProperty("user.andrzej.password"), "Andrzej Szaryk"),
-				User.create(properties.getProperty("user.april.username"), properties.getProperty("user.april.password"), "April Sauer"),
-				User.create(properties.getProperty("user.armando.username"), properties.getProperty("user.armando.password"), "Armando Bioc"),
-				User.create(properties.getProperty("user.ben.username"), properties.getProperty("user.ben.password"), "Ben Stoll"),
-				User.create(properties.getProperty("user.brian.username"), properties.getProperty("user.brian.password"), "Brian Pitta"),
-				User.create(properties.getProperty("user.caitlin.username"), properties.getProperty("user.caitlin.password"), "Caitlin Johanson"),
-				User.create(properties.getProperty("user.christraut.username"), properties.getProperty("user.christraut.password"), "Chris Trautwein"),
-				User.create(properties.getProperty("user.christyson.username"), properties.getProperty("user.christyson.password"), "Chris Tyson"),
-				User.create(properties.getProperty("user.clint.username"), properties.getProperty("user.clint.password"), "Clint Pollock"),
-				User.create(properties.getProperty("user.cody.username"), properties.getProperty("user.cody.password"), "Cody Bertram"),
-				User.create(properties.getProperty("user.derek.username"), properties.getProperty("user.derek.password"), "Derek Chowaniec"),
-				User.create(properties.getProperty("user.glenn.username"), properties.getProperty("user.glenn.password"), "Glenn Whittemore"),
-				User.create(properties.getProperty("user.grant.username"), properties.getProperty("user.grant.password"), "Grant Robinson"),
-				User.create(properties.getProperty("user.gregory.username"), properties.getProperty("user.gregory.password"), "Gregory Wolford"),
-				User.create(properties.getProperty("user.jacob.username"), properties.getProperty("user.jacob.password"), "Jacob Martel"),
-				User.create(properties.getProperty("user.jeremy.username"), properties.getProperty("user.jeremy.password"), "Jeremy Anderson"),
-				User.create(properties.getProperty("user.johnny.username"), properties.getProperty("user.johnny.password"), "Johnny Wong"),
-				User.create(properties.getProperty("user.kevin.username"), properties.getProperty("user.kevin.password"), "Kevin Rise"),
-				User.create(properties.getProperty("user.scottrum.username"), properties.getProperty("user.scottrum.password"), "Scott Rumrill"),
-				User.create(properties.getProperty("user.scottsim.username"), properties.getProperty("user.scottsim.password"), "Scott Simpson")
-			};
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
+	private static User[] users = new User[] {
+			User.create(System.getenv("USER_ADMIN"), System.getenv("PASS_ADMIN"), "Thats Mr Administrator to you."),
+			User.create(System.getenv("USER_JOHN"), System.getenv("PASS_JOHN"), "John Smith"),
+			User.create(System.getenv("USER_PAUL"), System.getenv("PASS_PAUL"), "Paul Farrington"),
+			User.create(System.getenv("USER_CHRISC"), System.getenv("PASS_CHRISC"), "Chris Campbell"),
+			User.create(System.getenv("USER_LAURIE"), System.getenv("PASS_LAURIE"), "Laurie Mercer"),
+			User.create(System.getenv("USER_NABIL"), System.getenv("PASS_NABIL"), "Nabil Bousselham"),
+			User.create(System.getenv("USER_JULIAN"), System.getenv("PASS_JULIAN"), "Julian Totzek-Hallhuber"),
+			User.create(System.getenv("USER_JOASH"), System.getenv("PASS_JOASH"), "Joash Herbrink"),
+			User.create(System.getenv("USER_ANDRZEJ"), System.getenv("PASS_ANDRZEJ"), "Andrzej Szaryk"),
+			User.create(System.getenv("USER_APRIL"), System.getenv("PASS_APRIL"), "April Sauer"),
+			User.create(System.getenv("USER_ARMANDO"), System.getenv("PASS_ARMANDO"), "Armando Bioc"),
+			User.create(System.getenv("USER_BEN"), System.getenv("PASS_BEN"), "Ben Stoll"),
+			User.create(System.getenv("USER_BRIAN"), System.getenv("PASS_BRIAN"), "Brian Pitta"),
+			User.create(System.getenv("USER_CAITLIN"), System.getenv("PASS_CAITLIN"), "Caitlin Johanson"),
+			User.create(System.getenv("USER_CHRISTRAUT"), System.getenv("PASS_CHRISTRAUT"), "Chris Trautwein"),
+			User.create(System.getenv("USER_CHRISTYSON"), System.getenv("PASS_CHRISTYSON"), "Chris Tyson"),
+			User.create(System.getenv("USER_CLINT"), System.getenv("PASS_CLINT"), "Clint Pollock"),
+			User.create(System.getenv("USER_CODY"), System.getenv("PASS_CODY"), "Cody Bertram"),
+			User.create(System.getenv("USER_DEREK"), System.getenv("PASS_DEREK"), "Derek Chowaniec"),
+			User.create(System.getenv("USER_GLENN"), System.getenv("PASS_GLENN"), "Glenn Whittemore"),
+			User.create(System.getenv("USER_GRANT"), System.getenv("PASS_GRANT"), "Grant Robinson"),
+			User.create(System.getenv("USER_GREGORY"), System.getenv("PASS_GREGORY"), "Gregory Wolford"),
+			User.create(System.getenv("USER_JACOB"), System.getenv("PASS_JACOB"), "Jacob Martel"),
+			User.create(System.getenv("USER_JEREMY"), System.getenv("PASS_JEREMY"), "Jeremy Anderson"),
+			User.create(System.getenv("USER_JOHNNY"), System.getenv("PASS_JOHNNY"), "Johnny Wong"),
+			User.create(System.getenv("USER_KEVIN"), System.getenv("PASS_KEVIN"), "Kevin Rise"),
+			User.create(System.getenv("USER_SCOTTRUM"), System.getenv("PASS_SCOTTRUM"), "Scott Rumrill"),
+			User.create(System.getenv("USER_SCOTTSIM"), System.getenv("PASS_SCOTTSIM"), "Scott Simpson") };
 
 	@RequestMapping(value = "/reset", method = RequestMethod.GET)
 	public String showReset() {
