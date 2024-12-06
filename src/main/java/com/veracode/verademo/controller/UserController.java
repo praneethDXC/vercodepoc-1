@@ -531,7 +531,7 @@ public class UserController {
 	        @RequestParam(value = "username", required = true) String username,
 	        @RequestParam(value = "file", required = false) MultipartFile file,
 	        MultipartHttpServletRequest request,
-	        HttpServletResponse response) {
+	        HttpServletResponse response) throws IOException {
 	    logger.info("Entering processProfile");
 
 	    String sessionUsername = (String) request.getSession().getAttribute("username");
@@ -614,12 +614,12 @@ public class UserController {
 	        }
 
 	        try {
-	            String originalFilename = file.getOriginalFilename();
-	            if (originalFilename == null || !originalFilename.matches("^[a-zA-Z0-9._-]+$")) {
-	                throw new IllegalArgumentException("Invalid file name");
+	            String extension = FilenameUtils.getExtension(file.getOriginalFilename());
+	            if (!extension.equalsIgnoreCase("png")) {
+	                throw new IllegalArgumentException("Invalid file type");
 	            }
-	            String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-	            String safeFileName = FilenameUtils.getName(username + extension);
+
+	            String safeFileName = FilenameUtils.getName(username + "." + extension);
 	            Path path = Paths.get(imageDir, safeFileName).normalize().toAbsolutePath();
 
 	            if (!path.startsWith(Paths.get(imageDir).toAbsolutePath())) {
@@ -775,13 +775,9 @@ public class UserController {
 	 * @param newUsername Desired new username
 	 * @return
 	 */
-	private boolean updateUsername(String oldUsername, String newUsername) {
+	private boolean updateUsername(String oldUsername, String newUsername) throws IOException {
 	    oldUsername = oldUsername.toLowerCase();
 	    newUsername = newUsername.toLowerCase();
-
-	    if (!oldUsername.matches("^[a-zA-Z0-9_-]+$") || !newUsername.matches("^[a-zA-Z0-9_-]+$")) {
-	        throw new IllegalArgumentException("Invalid username");
-	    }
 
 	    Connection connect = null;
 	    List<PreparedStatement> sqlUpdateQueries = new ArrayList<PreparedStatement>();
@@ -819,18 +815,20 @@ public class UserController {
 	            String safeOldImage = FilenameUtils.getName(oldImage);
 	            String safeNewImage = FilenameUtils.getName(newUsername + extension);
 
-	            File oldName = new File(path, safeOldImage);
-	            File newName = new File(path, safeNewImage);
+	            Path oldNamePath = Paths.get(path, safeOldImage).normalize();
+	            Path newNamePath = Paths.get(path, safeNewImage).normalize();
 
-	            if (!oldName.getCanonicalPath().startsWith(path) || !newName.getCanonicalPath().startsWith(path)) {
+	            if (!oldNamePath.startsWith(path) || !newNamePath.startsWith(path)) {
 	                throw new SecurityException("Potential path traversal attempt detected");
 	            }
 
+	            File oldName = oldNamePath.toFile();
+	            File newName = newNamePath.toFile();
 	            oldName.renameTo(newName);
 	        }
 
 	        return true;
-	    } catch (SQLException | ClassNotFoundException | IOException ex) {
+	    } catch (SQLException | ClassNotFoundException ex) {
 	        logger.error(ex);
 	    } finally {
 	        try {
