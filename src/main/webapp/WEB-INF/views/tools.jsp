@@ -1,5 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=US-ASCII"
-	pageEncoding="US-ASCII"%>
+<%@ page language="java" contentType="text/html; charset=US-ASCII" pageEncoding="US-ASCII"%>
 <%@ page import="com.veracode.verademo.utils.*"%>
 <%@ page import="java.util.*"%>
 <%@ page isELIgnored="false"%>
@@ -46,8 +45,7 @@
 					<li role="presentation"><a href="logout">Logout</a></li>
 				</ul>
 			</nav>
-			<img src="resources/images/Tokyoship_Talk_icon.svg" height="100"
-				width="100">
+			<img src="resources/images/Tokyoship_Talk_icon.svg" height="100" width="100">
 		</div>
 	</div>
 
@@ -64,7 +62,7 @@
 					value="<%= Encode.forHtmlAttribute(request.getParameter("host")) %>" <%}%> /> <input
 					type="submit" value="Check" />
 			</form>
-			<pre><%= Encode.forHtml((String) request.getAttribute("ping")) %></pre>
+			<pre>${ping}</pre>
 		</div>
 		<div>
 			<h5>Show a UNIX fortune from one of the 2 supported dictionaries.</h5>
@@ -74,7 +72,7 @@
 					<option value="riddles">riddles</option>
 				</select> <input type="submit" value="Change" />
 			</form>
-			<pre><%= Encode.forHtml((String) request.getAttribute("fortunes")) %></pre>
+			<pre>${fortunes}</pre>
 		</div>
 	</div>
 

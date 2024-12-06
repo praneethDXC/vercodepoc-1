@@ -91,7 +91,7 @@
 							<li>
 								<div>
 									<div class="commenterImage">
-										<img src="resources/images/<%= Encode.forUriComponent(post.getAuthor().getUsername()) %>.png" />
+										<img src="resources/images/<%= Encode.forHtmlAttribute(post.getAuthor().getUsername()) %>.png" />
 									</div>
 									<div class="commentText">
 										<p class=""><%= Encode.forHtml(post.getContent()) %></p>
@@ -100,7 +100,7 @@
 										</span>
 										<br/>
 										<span class="date sub-text">
-											<a href="blab?blabid=<%= Encode.forUriComponent(post.getId()) %>"><%= Encode.forHtml(post.getCommentCount().toString()) %> Comments</a>
+											<a href="blab?blabid=<%= Encode.forUriComponent(post.getId()) %>"><%= Encode.forHtml(post.getCommentCount()) %> Comments</a>
 										</span>
 									</div>
 								</div>
@@ -142,7 +142,7 @@
 									<p class=""><%= Encode.forHtml(post.getContent()) %></p>
 									<span class="date sub-text">by you on <%= Encode.forHtml(post.getPostDateString()) %></span><br/>
 									<span class="date sub-text">
-										<a href="blab?blabid=<%= Encode.forUriComponent(post.getId()) %>"><%= Encode.forHtml(post.getCommentCount().toString()) %> Comments</a>
+										<a href="blab?blabid=<%= Encode.forUriComponent(post.getId()) %>"><%= Encode.forHtml(post.getCommentCount()) %> Comments</a>
 									</span>
 								</div>
 							</li>
@@ -172,7 +172,7 @@
 				len : 10
 			}, function(data) {
 				if (data) {
-					$("#feed ul").append(Encode.forHtml(data));
+					$("#feed ul").append(Encode.forHtmlContent(data));
 				} else {
 					$(obj).remove();
 				}

@@ -80,11 +80,11 @@
 							<thead>
 								<tr>
 									<th></th>
-									<th class="commenterName"><a href="?sort=<%= Encode.forUri("blab_name ASC") %>">Name</a></th>
+									<th class="commenterName"><a href="?sort=blab_name ASC">Name</a></th>
 									<th class="commenterJoinDate"><a
-										href="?sort=<%= Encode.forUri("date_created DESC") %>">Join date</a></th>
+										href="?sort=date_created DESC">Join date</a></th>
 									<th class="commenterListeners"><a
-										href="?sort=<%= Encode.forUri("listeners DESC") %>">Listeners</a></th>
+										href="?sort=listeners DESC">Listeners</a></th>
 									<th></th>
 								</tr>
 							</thead>

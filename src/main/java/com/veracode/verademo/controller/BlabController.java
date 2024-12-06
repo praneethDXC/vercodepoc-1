@@ -146,54 +146,54 @@ public class BlabController {
 	@RequestMapping(value = "/morefeed", method = RequestMethod.GET, produces = "text/html;charset=UTF-8")
 	@ResponseBody
 	public String getMoreFeed(
-			@RequestParam(value = "count", required = true) String count,
-			@RequestParam(value = "len", required = true) String length,
-			Model model,
-			HttpServletRequest httpRequest) {
-		String template = "<li><div>" + "\t<div class=\"commenterImage\">" + "\t\t<img src=\"resources/images/%s.png\">"
-				+ "\t</div>" + "\t<div class=\"commentText\">" + "\t\t<p>%s</p>"
-				+ "\t\t<span class=\"date sub-text\">by %s on %s</span><br>"
-				+ "\t\t<span class=\"date sub-text\"><a href=\"blab?blabid=%d\">%d Comments</a></span>" + "\t</div>"
-				+ "</div></li>";
+	        @RequestParam(value = "count", required = true) String count,
+	        @RequestParam(value = "len", required = true) String length,
+	        Model model,
+	        HttpServletRequest httpRequest) {
+	    String template = "<li><div>" + "\t<div class=\"commenterImage\">" + "\t\t<img src=\"resources/images/%s.png\">"
+	            + "\t</div>" + "\t<div class=\"commentText\">" + "\t\t<p>%s</p>"
+	            + "\t\t<span class=\"date sub-text\">by %s on %s</span><br>"
+	            + "\t\t<span class=\"date sub-text\"><a href=\"blab?blabid=%d\">%d Comments</a></span>" + "\t</div>"
+	            + "</div></li>";
 
-		int cnt, len;
-		try {
-			cnt = Integer.parseInt(count);
-			len = Integer.parseInt(length);
-		} catch (NumberFormatException e) {
-			return "";
-		}
+	    int cnt, len;
+	    try {
+	        cnt = Integer.parseInt(count);
+	        len = Integer.parseInt(length);
+	    } catch (NumberFormatException e) {
+	        return "";
+	    }
 
-		String username = (String) httpRequest.getSession().getAttribute("username");
+	    String username = (String) httpRequest.getSession().getAttribute("username");
 
-		Connection connect;
-		PreparedStatement feedSql;
-		StringBuilder ret = new StringBuilder();
-		try {
-			Class.forName("com.mysql.jdbc.Driver");
-			connect = DriverManager.getConnection(Constants.create().getJdbcConnectionString());
-			feedSql = connect.prepareStatement(String.format(sqlBlabsForMe, len, cnt));
-			feedSql.setString(1, username);
+	    Connection connect;
+	    PreparedStatement feedSql;
+	    StringBuilder ret = new StringBuilder();
+	    try {
+	        Class.forName("com.mysql.jdbc.Driver");
+	        connect = DriverManager.getConnection(Constants.create().getJdbcConnectionString());
+	        feedSql = connect.prepareStatement(String.format(sqlBlabsForMe, len, cnt));
+	        feedSql.setString(1, username);
 
-			ResultSet results = feedSql.executeQuery();
-			while (results.next()) {
-				Blab blab = new Blab();
-				blab.setPostDate(results.getDate(4));
+	        ResultSet results = feedSql.executeQuery();
+	        while (results.next()) {
+	            Blab blab = new Blab();
+	            blab.setPostDate(results.getDate(4));
 
-				ret.append(String.format(template, 
-						Encode.forHtml(results.getString(1)), // username
-						Encode.forHtml(results.getString(3)), // blab content
-						Encode.forHtml(results.getString(2)), // blab name
-						Encode.forHtml(blab.getPostDateString()), // timestamp
-						results.getInt(6), // blabID
-						results.getInt(5) // comment count
-				));
-			}
-		} catch (SQLException | ClassNotFoundException ex) {
-			logger.error(ex);
-		}
+	            ret.append(String.format(template, 
+	                    Encode.forHtml(results.getString(1)), // username
+	                    Encode.forHtml(results.getString(3)), // blab content
+	                    Encode.forHtml(results.getString(2)), // blab name
+	                    Encode.forHtml(blab.getPostDateString()), // timestamp
+	                    results.getInt(6), // blabID
+	                    results.getInt(5) // comment count
+	            ));
+	        }
+	    } catch (SQLException | ClassNotFoundException ex) {
+	        logger.error(ex);
+	    }
 
-		return Encode.forHtml(ret.toString());
+	    return Encode.forHtml(ret.toString());
 	}
 
 	@RequestMapping(value = "/feed", method = RequestMethod.POST)

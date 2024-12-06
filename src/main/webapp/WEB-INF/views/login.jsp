@@ -74,7 +74,7 @@
 							password to login to Blab</h3>
 					</div>
 					<div class="panel-body">
-						<form method="POST" action="<%= Encode.forUriComponent((String) request.getAttribute("javax.servlet.forward.request_uri")) %>">
+						<form method="POST" action="<%= Encode.forUri((String) request.getAttribute("javax.servlet.forward.request_uri")) %>">
 							<input type="hidden" name="target"
 								value="<%= Encode.forHtmlAttribute((String) request.getAttribute("target")) %>">
 							<table class="table table-condensed">
